@@ -9,6 +9,7 @@ const firebaseContext = React.createContext();
 // Provider hook that initializes firebase, creates firebase object and handles state
 function useProvideFirebase() {
   const [user, setUser] = React.useState(null);
+  const [posts, setPosts] = React.useState([]);
 
   React.useEffect(() => {
     if (!firebase.apps.length) {
@@ -21,9 +22,18 @@ function useProvideFirebase() {
       setUser(user);
     });
 
+    firebase
+      .database()
+      .ref("/posts")
+      .on("value", function (snapshot) {
+        console.log("value is ", Object.values(snapshot.val()));
+        setPosts(Object.values(snapshot.val()));
+      });
+
     return function cleanup() {
       // looks like you don't need to do any clean up, but if you do, do it here
       unsubscribeFunction();
+      firebase.database().ref("/posts").off();
     };
   }, []);
 
@@ -39,11 +49,17 @@ function useProvideFirebase() {
     await firebase.auth().signOut();
   };
 
+  const post = async (values) => {
+    await firebase.database().ref("posts").push(values);
+  };
+
   return {
+    posts,
     user,
     register,
     login,
     signout,
+    post,
   };
 }
 
