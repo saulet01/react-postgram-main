@@ -8,74 +8,91 @@ const firebaseContext = React.createContext();
 
 // Provider hook that initializes firebase, creates firebase object and handles state
 function useProvideFirebase() {
-  const [user, setUser] = React.useState(null);
-  const [posts, setPosts] = React.useState([]);
+    const [user, setUser] = React.useState(null);
+    const [posts, setPosts] = React.useState([]);
 
-  React.useEffect(() => {
-    if (!firebase.apps.length) {
-      console.log("I am initializing new firebase app");
-      firebase.initializeApp(config);
-    }
+    React.useEffect(() => {
+        if (!firebase.apps.length) {
+            console.log("I am initializing new firebase app");
+            firebase.initializeApp(config);
+        }
 
-    const unsubscribeFunction = firebase.auth().onAuthStateChanged((user) => {
-      console.log("got new user", user);
-      setUser(user);
-    });
+        const unsubscribeFunction = firebase.auth().onAuthStateChanged(user => {
+            console.log("got new user", user);
+            setUser(user);
+        });
 
-    firebase
-      .database()
-      .ref("/posts")
-      .on("value", function (snapshot) {
-        console.log("value is ", Object.values(snapshot.val()));
-        setPosts(Object.values(snapshot.val()));
-      });
+        firebase
+            .database()
+            .ref("/posts")
+            .on("value", function(snapshot) {
+                const postsArray = [];
+                for (const key in snapshot.val()) {
+                    postsArray.push({
+                        ...snapshot.val()[key],
+                        id: key
+                    });
+                }
 
-    return function cleanup() {
-      // looks like you don't need to do any clean up, but if you do, do it here
-      unsubscribeFunction();
-      firebase.database().ref("/posts").off();
+                setPosts(postsArray);
+            });
+
+        return function cleanup() {
+            // looks like you don't need to do any clean up, but if you do, do it here
+            unsubscribeFunction();
+            firebase
+                .database()
+                .ref("/posts")
+                .off();
+        };
+    }, []);
+
+    const deletePost = async postId => {
+        await firebase
+            .database()
+            .ref("posts/" + postId)
+            .remove();
     };
-  }, []);
 
-  const register = async (email, password) => {
-    await firebase.auth().createUserWithEmailAndPassword(email, password);
-  };
+    const register = async (email, password) => {
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+    };
 
-  const login = async (email, password) => {
-    await firebase.auth().signInWithEmailAndPassword(email, password);
-  };
+    const login = async (email, password) => {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+    };
 
-  const signout = async () => {
-    await firebase.auth().signOut();
-  };
+    const signout = async () => {
+        await firebase.auth().signOut();
+    };
 
-  const post = async (values) => {
-    await firebase.database().ref("posts").push(values);
-  };
+    const post = async values => {
+        await firebase
+            .database()
+            .ref("posts")
+            .push(values);
+    };
 
-  return {
-    posts,
-    user,
-    register,
-    login,
-    signout,
-    post,
-  };
+    return {
+        posts,
+        user,
+        register,
+        login,
+        signout,
+        post,
+        deletePost
+    };
 }
 
 // Provider component that wraps your app and makes auth object ...
 // ... available to any child component that calls useFirebase().
 export function ProvideFirebase({ children }) {
-  const firebaseHook = useProvideFirebase();
-  return (
-    <firebaseContext.Provider value={firebaseHook}>
-      {children}
-    </firebaseContext.Provider>
-  );
+    const firebaseHook = useProvideFirebase();
+    return <firebaseContext.Provider value={firebaseHook}>{children}</firebaseContext.Provider>;
 }
 
 // Hook for child components to get the auth object ...
 // ... and re-render when it changes.
 export const useFirebase = () => {
-  return React.useContext(firebaseContext);
+    return React.useContext(firebaseContext);
 };

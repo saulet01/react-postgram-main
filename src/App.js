@@ -8,15 +8,15 @@ import "./App.css";
 import "antd/dist/antd.css";
 
 function App() {
-  return (
-    <ProvideFirebase>
-      <Router>
-        <MainPage path="/" />
-        <Login path="/login" />
-        <Register path="/register" />
-      </Router>
-    </ProvideFirebase>
-  );
+    return (
+        <ProvideFirebase>
+            <Router>
+                <MainPage path="/" />
+                <Login path="/login" />
+                <Register path="/register" />
+            </Router>
+        </ProvideFirebase>
+    );
 }
 
 export default App;
