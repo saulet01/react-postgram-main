@@ -2,8 +2,9 @@ import React from "react";
 import firebase from "firebase/app";
 import "firebase/database";
 import "firebase/auth";
+import "firebase/storage";
 import { config } from "./config";
-
+import crypto from "crypto";
 const firebaseContext = React.createContext();
 
 // Provider hook that initializes firebase, creates firebase object and handles state
@@ -66,11 +67,32 @@ function useProvideFirebase() {
         await firebase.auth().signOut();
     };
 
-    const post = async values => {
+    const post = async (values, file) => {
+        console.log(file);
+        let uniqueID = crypto.randomBytes(20).toString("hex");
+        let fileExtension = file.type.split("/")[1];
+        let filename = `${uniqueID}.${fileExtension}`;
+        let storageRef = firebase.storage().ref();
+        let imagesRef = storageRef.child(`${filename}`);
+        var metadata = {
+            contentType: "image/jpeg"
+        };
+        await imagesRef
+            .put(file.originFileObj, metadata)
+            .then(function(snapshot) {
+                console.log("Uploaded a blob or file!");
+            })
+            .catch(e => {
+                console.log(e);
+                console.log("Error! Storage");
+            });
+
+        const imageURL = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${filename}?alt=media`;
+
         await firebase
             .database()
             .ref("posts")
-            .push({ ...values, author: firebase.auth().currentUser.email, authorId: firebase.auth().currentUser.uid });
+            .push({ ...values, author: firebase.auth().currentUser.email, authorId: firebase.auth().currentUser.uid, date: new Date().toISOString(), imageURL: imageURL });
     };
 
     return {

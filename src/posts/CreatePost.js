@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import { Form, Input, Button, Layout, PageHeader, message, Space, DatePicker } from "antd";
+import { Form, Input, Button, Layout, PageHeader, message, Space, Upload } from "antd";
 import { useFirebase } from "../firebase/useFirebase";
+import { UploadOutlined } from "@ant-design/icons";
 
 const MainLayout = styled(Layout)`
     width: 100vw;
@@ -19,10 +20,30 @@ const MyForm = styled(Form)`
 
 function CreatePost({ onCancelClick }) {
     const { post } = useFirebase();
+    const [file, setFile] = useState(null);
+
+    const props = {
+        name: "file",
+        action: "https://www.mocky.io/v2/5cc8019d300000980a055e76",
+        headers: {
+            authorization: "authorization-text"
+        },
+        onChange(info) {
+            if (info.file.status === "done") {
+                setFile(info.file);
+                // message.success(`${info.file.name} file uploaded successfully`);
+            } else if (info.file.status === "error") {
+                message.error(`${info.file.name} file upload failed.`);
+            }
+        }
+    };
 
     const onFormFinish = async values => {
-        console.log("got some values", { ...values, date: new Date().toISOString() });
-        await post({ ...values, date: new Date().toISOString() });
+        if (file == null) {
+            return message.error("Image is required! Please upload an image");
+        }
+
+        await post(values, file);
         message.success("Saved your post!");
         onCancelClick();
     };
@@ -44,13 +65,24 @@ function CreatePost({ onCancelClick }) {
                     <Input />
                 </Form.Item>
 
-                <Form.Item name="content" label="Content">
+                <Form.Item
+                    name="content"
+                    label="Content"
+                    rules={[
+                        {
+                            required: true,
+                            message: "Please input content for the post"
+                        }
+                    ]}
+                >
                     <Input.TextArea />
                 </Form.Item>
 
-                <Form.Item name="imageURL" label="Image URL">
-                    <Input.TextArea />
-                </Form.Item>
+                <Upload {...props}>
+                    <Button>
+                        <UploadOutlined /> Click to Upload
+                    </Button>
+                </Upload>
 
                 <Form.Item>
                     <Space>
