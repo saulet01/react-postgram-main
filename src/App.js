@@ -6,6 +6,7 @@ import Login from "./auth/Login";
 import Register from "./auth/Register";
 import "./App.css";
 import "antd/dist/antd.css";
+import AuthorPosts from "./posts/AuthorPosts";
 
 function App() {
     return (
@@ -14,6 +15,7 @@ function App() {
                 <MainPage path="/" />
                 <Login path="/login" />
                 <Register path="/register" />
+                <AuthorPosts path="/posts/:userId" />
             </Router>
         </ProvideFirebase>
     );

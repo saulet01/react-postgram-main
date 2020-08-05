@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { Card, Row, Col, Button, message } from "antd";
 import moment from "moment";
 import { useFirebase } from "../firebase/useFirebase";
+import { Link } from "@reach/router";
 
 const MyCard = styled(Card)`
     margin-top: 50px;
@@ -43,6 +44,11 @@ function SinglePost({ post }) {
                     <div>
                         <span style={{ fontWeight: "bold" }}>Text: </span>
                         {post.content}
+                    </div>
+                    <div>
+                        <Link to={`posts/${post.authorId}`} key="4">
+                            {post.author}
+                        </Link>
                     </div>
                 </Col>
             </Row>

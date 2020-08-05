@@ -18,7 +18,7 @@ function useProvideFirebase() {
         }
 
         const unsubscribeFunction = firebase.auth().onAuthStateChanged(user => {
-            console.log("got new user", user);
+            // console.log("got new user", user);
             setUser(user);
         });
 
@@ -70,7 +70,7 @@ function useProvideFirebase() {
         await firebase
             .database()
             .ref("posts")
-            .push(values);
+            .push({ ...values, author: firebase.auth().currentUser.email, authorId: firebase.auth().currentUser.uid });
     };
 
     return {
